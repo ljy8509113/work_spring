@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+  <mapper namespace="com.koitt.model.Emp">
+  <!-- 대소문자 구분 안함 -->
+  	<resultMap type="com.koitt.model.Emp" id="empResultMap">
+  		<id property="empno" column="empno"></id>
+  		<result property="ename" column="ename"></result>
+  		<result property="job" column="job"/>
+  		<result property="mgr" column="mgr"/>
+  		<result property="hireDate" column="hiredate"/>
+  		<result property="sal" column="sal"/>
+  		<result property="comm" column="comm"/>
+  		<result property="deptno" column="deptno"/>
+  	</resultMap>
+  	
+  	<select id="select" parameterType="int" resultMap="empResultMap">
+  		select * from emp where empno = #{empno}
+  	</select>
+  	
+  	<!-- resultMap 엘리먼트 이용하지 않는 방법 -->
+  	<select id="select2" parameterType="int" resultType="com.koitt.model.Emp">
+  		select * from emp where empno = #{empno}
+  	</select>
+  </mapper>

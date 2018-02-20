@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+  
+  <configuration>
+  	<environments default="development"> <!-- environments 설정에 따라 environment id값을 사용  -->
+  		<environment id="development">
+  			<transactionManager type="JDBC"/>
+  			<dataSource type="POOLED">
+  				<property name="driver" value="com.mysql.jdbc.Driver"></property>
+  				<property name="url" value="jdbc:mysql://localhost:3306/koitt"></property>
+  				<property name="username" value="root"></property>
+  				<property name="password" value="koitt"></property>
+  			</dataSource>
+  		</environment>
+  		<!-- <environment id="release">
+  			<transactionManager type="JDBC"/>
+  			<dataSource type="POOLED">
+  				<property name="driver" value="oracle.jdbc.driver.OracleDriver"></property>
+  				<property name="url" value="jdbc:mysql://localhost:3306/koitt"></property>
+  				<property name="username" value="root"></property>
+  				<property name="password" value="koitt"></property>
+  			</dataSource>
+  		</environment> -->
+  	</environments>
+  	<mappers>
+  		<mapper resource="com/koitt/config/mapper.xml"></mapper>
+  	</mappers>
+  </configuration>

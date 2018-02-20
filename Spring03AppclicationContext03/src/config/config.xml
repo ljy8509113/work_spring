@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+<!--
+scope
+singleton 	스프링 컨테이너에 한개의 빈 객체만 존재(기본)
+prototype 	새로운 객체 생성
+request 	http 요청마다 새로운 빈 객체를 생성
+session 	http 세션마다 새로운 빈 객체를 생성 
+ -->
+	<bean name="person" class="bean.PersonImpl" scope="singleton">
+		<constructor-arg>
+			<value type="java.lang.String">Hello</value>
+		</constructor-arg>
+		<constructor-arg value="원빈"></constructor-arg>
+		<constructor-arg>
+			<value type="int">41</value>
+		</constructor-arg>
+	</bean>
+	
+</beans>
