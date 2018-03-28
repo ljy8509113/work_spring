@@ -59,35 +59,35 @@ public class BoardWebController {
 	
 	// 글 상세 화면
 	@RequestMapping(value="/board-detail.do", method=RequestMethod.GET)
-	public String detail(Model model, 
-			HttpServletRequest request,
+	public String detail(Model model, HttpServletRequest request,
 			@RequestParam(value="no", required=true) String no) {
 		Board board = null;
 		String filename = null;
 		String imgPath = null;
+		
 		try {
 			board = boardService.detail(no);
-			filename = board.getAttachment();
 			
-			if(filename != null && !filename.trim().isEmpty()) {
+			filename = board.getAttachment();
+			if (filename != null && !filename.trim().isEmpty()) {
 				filename = URLDecoder.decode(filename, "UTF-8");
 			}
 			
 			imgPath = fileService.getImgPath(request, filename);
+			
 		} catch (BoardException e) {
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 			model.addAttribute("error", "server");
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			model.addAttribute("error", "server");
+			System.out.println(e.getMessage());
+			model.addAttribute("error", "encoding");
 		}
 		
 		model.addAttribute("board", board);
 		model.addAttribute("filename", filename);
-		
-		if(imgPath != null && !imgPath.trim().isEmpty())
+		if (imgPath != null && !imgPath.trim().isEmpty()) {
 			model.addAttribute("imgPath", imgPath);
+		}
 		
 		return "board-detail";
 	}
@@ -137,112 +137,94 @@ public class BoardWebController {
 	
 	// 글 삭제 후, 글 목록 화면으로 이동
 	@RequestMapping(value="/board-remove.do", method=RequestMethod.POST)
-	public String remove(Model model, HttpServletRequest request, String no) {
+	public String remove(Model model, String no, HttpServletRequest request) {
 		try {
-			String filename = boardService.remove(no);
-			fileService.remove(request, filename);
+			String toDeleteFilename = boardService.remove(no);
+			fileService.remove(request, toDeleteFilename);
 			
 		} catch (BoardException e) {
 			model.addAttribute("error", "server");
 		} catch (FileException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			model.addAttribute("error", "remove");
+			model.addAttribute("error", "file");
 		}
 		
 		return "redirect:board-list.do";
 	}
 	
 	// 글 수정하기 화면
-		@RequestMapping(value="/board-modify.do", method=RequestMethod.GET)
-		public String modify(Model model,
-				@RequestParam(value="no", required=true) String no) {
-			Board board = null;
+	@RequestMapping(value="/board-modify.do", method=RequestMethod.GET)
+	public String modify(Model model,
+			@RequestParam(value="no", required=true) String no) {
+		Board board = null;
+		
+		try {
+			/*
+			 * 수정하고자 하는 글의 정보를 가져와서
+			 * 글 수정하기 화면에 출력하기 위해 아래와 같이 호출
+			 */
+			board = boardService.detail(no);
 			
-			try {
-				/*
-				 * 수정하고자 하는 글의 정보를 가져와서
-				 * 글 수정하기 화면에 출력하기 위해 아래와 같이 호출
-				 */
-				board = boardService.detail(no);
-				
-			} catch (BoardException e) {
-				model.addAttribute("error", "server");
-			}
-			
-			model.addAttribute("board", board);
-			
-			return "board-modify";
+		} catch (BoardException e) {
+			model.addAttribute("error", "server");
 		}
 		
-//	// 글 수정하기 화면
-//	@RequestMapping(value="/board-modify.do", method=RequestMethod.GET)
-//	public String modify(Integer no, 
-//			String title, 
-//			String content,
-//			HttpServletRequest request,
-//			@RequestParam(value="attachment") MultipartFile attachment) {
-//		Board board = new Board();
-//		board.setNo(no);
-//		board.setTitle(title);
-//		board.setContent(content);
-//		String filename = null;
-//		try {
-//			/*
-//			 * 수정하고자 하는 글의 정보를 가져와서
-//			 * 글 수정하기 화면에 출력하기 위해 아래와 같이 호출
-//			 */
-//			fileService.add(request, attachment, board);
-//			filename = boardService.modify(board);
-//			
-//			fileService.remove(request, filename);
-//			
-//		} catch (BoardException e) {
-//			request.setAttribute("error", "server");
-//		} catch (FileException e) {
-//			request.setAttribute("error", "server");
-//		}
-//		
-//		request.setAttribute("board", board);
-//		
-//		return "board-modify";
-//	}
+		model.addAttribute("board", board);
+		
+		return "board-modify";
+	}
 	
 	// 글 수정한 후, 글 목록 화면으로 이동
 	@RequestMapping(value="/board-modify.do", method=RequestMethod.POST)
-	public String modify(Integer no, 
-			String title, 
+	public String modify(HttpServletRequest request,
+			Integer no,
+			String title,
 			String content,
-			HttpServletRequest request,
-			@RequestParam(value="attachment") MultipartFile attachment) {
+			@RequestParam("attachment") MultipartFile attachment) {
 		
 		Board board = new Board();
 		board.setNo(no);
 		board.setTitle(title);
 		board.setContent(content);
-		String filename = null;
 		
 		try {
+			// 새롭게 수정할 파일을 서버에 저장
 			fileService.add(request, attachment, board);
-			filename = boardService.modify(board);
-			fileService.remove(request, filename);
+			
+			// 기존 파일명을 가져온다.
+			String toDeleteFilename = boardService.modify(board);
+			
+			// 기존에 있던 파일을 삭제
+			fileService.remove(request, toDeleteFilename);
 			
 		} catch (BoardException e) {
+			System.out.println(e.getMessage());
 			request.setAttribute("error", "server");
 		} catch (FileException e) {
-			// TODO Auto-generated catch block
+			System.out.println(e.getMessage());
 			request.setAttribute("error", "file");
 		}
 		
 		return "redirect:board-list.do";
 	}
 	
+	/*
+	 * 다운로드 링크를 화면에서 클릭하면 아래와 같이 서버에 GET 방식으로 요청한다.
+	 * download.do?filename=파일명
+	 * 
+	 * 아래 RequestMapping 애노테이션 뜻은 아래와 같다.
+	 * 요청 URL은 /download.do
+	 * 요청 HTTP Method는 GET
+	 * 요청한 쿼리문자열의 변수명이 filename일 경우 아래 메소드를 실행 (params)
+	 */
 	@RequestMapping(value="/download.do", method=RequestMethod.GET, params="filename")
-	public void download(HttpServletRequest request, HttpServletResponse response, String filename) {
+	public void download(HttpServletRequest request, HttpServletResponse response, 
+			String filename) {
+		
 		try {
 			fileService.download(request, response, filename);
-		}catch(FileException e) {
-			e.printStackTrace();
+			
+		} catch (FileException e) {
+			System.out.println(e.getMessage());
 		}
 	}
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<!-- MySQL 데이터베이스 접속 -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url"
+			value="jdbc:mysql://localhost:3306/koitt?useSSL=false" />
+		<property name="username" value="root" />
+		<property name="password" value="koitt" />
+	</bean>
+
+	<!-- Spring Batch에서 ItemReader를 통해 읽은 내용을 하나의 덩어리(chunk)가 꽉 찼을때 ItemProcessor 
+		혹은 ItemWriter로 전달하는데 그 덩어리를 한번 전달할 때마다 트랜젝션이 발생했다고 한다. (여기서 말하는 트랜젝션 개념은 
+		데이터베이스와 조금 다르다. 하나의 작업단위를 부르는 것에 대해서는 동일한 의미이다.) -->
+	<bean id="transactionManager"
+		class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+
+	<bean id="jobRepository"
+		class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean">
+		<property name="transactionManager" ref="transactionManager" />
+	</bean>
+
+	<!-- JobLauncher 빈 생성: Job을 실행하기 위해 선언 -->
+	<bean id="jobLauncher"
+		class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+		<property name="jobRepository" ref="jobRepository" />
+	</bean>
+
+	<!-- Job과 관련된 스프링 설정은 따로 분리해서 선언하기 위해 import 사용 -->
+	<import resource="../jobs/job-mysql-to-xml.xml" />
+
+
+	<!-- 메일 발송을 위한 빈 객체 등록 (Gmail) 참고자료: https://support.google.com/mail/answer/7104828?hl=ko&rd=3&visit_id=1-636558471446668580-299053446 -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com" />
+		<property name="port" value="587" />
+		<property name="protocol" value="smtp" />
+		<property name="defaultEncoding" value="utf-8" />
+		<property name="username" value="" />
+		<property name="password" value="" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.debug">true</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- FreeMarker: 메일 발송을 위한 템플릿 제공 templateLoaderPath: FreeMarker 템플릿 파일이 
+		저장된 위치 설정 (ClassPath 기준) -->
+	<bean id="freeMarkerConfiguration"
+		class="org.springframework.ui.freemarker.FreeMarkerConfigurationFactoryBean">
+		<property name="templateLoaderPath" value="/fm_templates" />
+	</bean>
+
+	<context:component-scan base-package="com.koitt" />
+	<import resource="./spring-task-scheduler.xml" />
+</beans>

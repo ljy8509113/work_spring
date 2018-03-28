@@ -12,14 +12,12 @@
 		<dt>작성일</dt><dd>${ board.regdate }</dd>
 		<dt>제목</dt><dd>${ board.title }</dd>
 		<dt>내용</dt><dd>${ board.content }</dd>
-		
-		<c:if test='${ !empty filename }'>
+		<c:if test="${ !empty filename }">
 			<dt>첨부파일</dt>
-			<dd><a href="download.do?filename=${ board.attachment }">${filename}</a></dd>
+			<dd><a href="download.do?filename=${ board.attachment }">${ filename }</a></dd>
 		</c:if>
-		
-		<c:if test='${ !empty imgPath }'>
-			<img src='${imgPath }' alt="image"/>
+		<c:if test="${ !empty imgPath }">
+			<img src="${ imgPath }" alt="이미지 파일 출력위치">
 		</c:if>
 	</dl>
 	<a href="board-list.do">글 목록으로 이동</a>
